@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Plus, Edit2, Trash2, Search, CheckCircle2, XCircle, Car as CarIcon, X, Info, Gauge, Fuel, Upload, Loader2 } from 'lucide-react';
 import { useCars } from '../../context/CarsContext';
 import type { Car } from '../../types';
+import { getImageUrl } from '../../config';
 
 // --- Sub-Components ---
 
@@ -11,7 +12,7 @@ const CarCard = ({ car, onEdit, onDelete, onStatusToggle }: { car: Car, onEdit: 
       <div className="relative h-40 md:h-56 lg:h-[220px] bg-gray-50 overflow-hidden shrink-0">
         {car?.image_url ? (
           <img 
-            src={car.image_url} 
+            src={getImageUrl(car.image_url)} 
             alt={car?.name || "unnamed car"} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
           />
@@ -214,7 +215,7 @@ const CarFormModal = ({ isOpen, onClose, onSubmit, initialData }: { isOpen: bool
                         </div>
                       ) : formData.image_url ? (
                         <div className="w-full aspect-[16/10] rounded-2xl md:rounded-3xl overflow-hidden mb-4 md:mb-6 shadow-2xl border-2 md:border-4 border-white animate-in zoom-in-95 duration-500">
-                           <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
+                           <img src={getImageUrl(formData.image_url)} alt="Preview" className="w-full h-full object-cover" />
                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/upload:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
                               <div className="bg-white text-black px-4 py-2 rounded-full font-black text-[8px] md:text-[10px] uppercase flex items-center gap-2">
                                  <Plus size={12} /> Replace Image

@@ -22,7 +22,7 @@ export default function Register() {
     setError('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      const res = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -50,7 +50,7 @@ export default function Register() {
           <div className="w-16 h-16 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-6 text-[var(--color-accent)] shadow-inner">
              <ShieldCheck size={32} />
           </div>
-          <h1 className="font-heading font-black text-4xl text-gray-900 tracking-tighter uppercase">
+          <h1 className="font-heading font-black text-2xl text-gray-900 tracking-tighter uppercase">
             REGISTRATION
           </h1>
           <p className="text-gray-400 font-bold text-xs uppercase tracking-widest mt-2">D&middot;LIGHT Car Rental Admin</p>

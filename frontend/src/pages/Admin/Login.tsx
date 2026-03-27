@@ -16,15 +16,15 @@ export default function Login() {
     setError('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
 
       if (!res.ok) {
-        if (res.status === 401) throw new Error('Invalid username or password');
-        throw new Error('Server connection error. Please try again.');
+        const data = await res.json();
+        throw new Error(data.detail || 'Access denied.');
       }
       
       const data = await res.json();

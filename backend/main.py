@@ -25,8 +25,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-os.makedirs("static/cars", exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+os.makedirs("uploads", exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "dlight_secret_key_for_jwt")
 ALGORITHM = os.environ.get("ALGORITHM", "HS256")
@@ -124,7 +124,7 @@ def get_settings(db: Session = Depends(get_db)):
 
 # --- Auth Routes ---
 
-@app.post("/api/auth/register", response_model=schemas.UserResponse)
+@app.post("/api/register", response_model=schemas.UserResponse)
 def register(req: schemas.RegisterRequest, db: Session = Depends(get_db)):
     existing_user = db.query(models.User).filter(
         models.User.username == req.username).first()
@@ -138,7 +138,7 @@ def register(req: schemas.RegisterRequest, db: Session = Depends(get_db)):
     return new_user
 
 
-@app.post("/api/auth/login")
+@app.post("/api/login")
 def login(req: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(
         models.User.username == req.username).first()
@@ -175,12 +175,12 @@ async def upload_car_image(file: UploadFile = File(...)):
     # Create filename
     ext = file.filename.split(".")[-1]
     filename = f"car_{int(datetime.utcnow().timestamp())}.{ext}"
-    file_path = f"static/cars/{filename}"
+    file_path = f"uploads/{filename}"
 
     with open(file_path, "wb") as buffer:
         buffer.write(await file.read())
 
-    return {"image_url": f"http://localhost:8000/{file_path}"}
+    return {"image_url": f"/uploads/{filename}"}
 
 
 @app.patch("/api/admin/cars/{car_id}/status", response_model=schemas.CarResponse, dependencies=[Depends(verify_token)])

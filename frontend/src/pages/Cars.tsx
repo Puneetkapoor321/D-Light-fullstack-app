@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useCars } from "../context/CarsContext";
 import { Fuel, Eye, Gauge } from "lucide-react";
+import { getImageUrl } from "../config";
 
 export default function Cars() {
   const { cars, loading } = useCars();
@@ -52,10 +53,7 @@ export default function Cars() {
             >
               <div className="relative h-52 md:h-60 w-full img-zoom-hover shrink-0">
                 <img
-                  src={
-                    car.image_url ||
-                    "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?q=80&w=800"
-                  }
+                  src={getImageUrl(car.image_url)}
                   alt={car.name}
                   loading="lazy"
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

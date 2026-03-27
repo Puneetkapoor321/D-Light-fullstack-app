@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useCars } from "../context/CarsContext";
 import { useBookings } from "../context/BookingsContext";
+import { getImageUrl } from "../config";
 
 export default function Booking() {
   const { cars, loading: carsLoading } = useCars();
@@ -349,9 +350,7 @@ export default function Booking() {
               {selectedCar ? (
                 <div className="w-full h-56 rounded-3xl overflow-hidden shadow-2xl transition duration-500 hover:scale-[1.05] relative group border-4 border-white/50">
                   <img
-                    src={
-                      selectedCar.image_url || "/images/cars/black-swift.png"
-                    }
+                    src={getImageUrl(selectedCar.image_url)}
                     alt={selectedCar.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
