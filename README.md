@@ -10,7 +10,7 @@ It combines a **fast React frontend** with a **scalable FastAPI backend**, enabl
 
 ## 🔗 Live Demo
 
-👉 https://your-live-link.com
+👉 https://d-light-fullstack-app.vercel.app/
 
 ---
 
