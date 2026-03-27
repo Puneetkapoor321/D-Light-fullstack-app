@@ -80,16 +80,16 @@ D-LIGHT was built to:
 ## 📸 Screenshots
 
 ### 🏠 Home Page
-![Home Page](./screenshots/home.png)
+![Home Page](./screenshots/Home.png)
 
 ### 📅 Booking Flow
-![Booking](./screenshots/booking.png)
+![Booking](./screenshots/Booking.png)
 
 ### Social Connection Page
-![Social Connection Page](./screenshots/social.png)
+![Social Connection Page](./screenshots/Social.png)
 
 ### 🛡️ Admin Dashboard
-![Admin Panel](./screenshots/admin.png)
+![Admin Panel](./screenshots/Admin.png)
 
 
 ## 🚀 Run Locally
