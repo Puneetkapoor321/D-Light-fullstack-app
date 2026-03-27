@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, useMemo, useCallback, t
 import type { Booking } from '../types';
 import { API_BASE_URL } from '../config';
 
-const FALLBACK_BOOKINGS: Booking[] = [];
 
 interface BookingsContextType {
   bookings: Booking[];
@@ -29,14 +28,12 @@ export const BookingsProvider = ({ children }: { children: ReactNode }) => {
       if (res.ok) {
         const data = await res.json();
         setBookings(data);
-        localStorage.setItem('bookingsData', JSON.stringify(data));
       } else {
-        const saved = localStorage.getItem('bookingsData');
-        setBookings(saved ? JSON.parse(saved) : FALLBACK_BOOKINGS);
+        setBookings([]);
       }
     } catch (err) {
-      const saved = localStorage.getItem('bookingsData');
-      setBookings(saved ? JSON.parse(saved) : FALLBACK_BOOKINGS);
+      console.error("Failed to fetch bookings:", err);
+      setBookings([]);
     } finally {
       setLoading(false);
     }
@@ -65,21 +62,19 @@ export const BookingsProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchBookings]);
 
   const deleteBooking = useCallback(async (id: number) => {
-    const originalBookings = [...bookings];
-    setBookings(prev => prev.filter(b => b.id !== id));
-
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_BASE_URL}/admin/bookings/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error("Failed to delete");
-      localStorage.setItem('bookingsData', JSON.stringify(bookings.filter(b => b.id !== id)));
+      if (!res.ok) throw new Error("Failed to delete booking");
+      await fetchBookings();
     } catch (err) {
-      setBookings(originalBookings);
+      console.error("Booking deletion error:", err);
+      throw err;
     }
-  }, [bookings]);
+  }, [fetchBookings]);
 
   const updateBookingStatus = useCallback(async (id: number, status: string) => {
     try {
@@ -93,13 +88,15 @@ export const BookingsProvider = ({ children }: { children: ReactNode }) => {
          body: JSON.stringify({ status })
        });
        if (res.ok) {
-          setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
-          localStorage.setItem('bookingsData', JSON.stringify(bookings.map(b => b.id === id ? { ...b, status } : b)));
+          await fetchBookings();
+       } else {
+          throw new Error("Failed to update booking status");
        }
     } catch (err) {
-       console.error(err);
+       console.error("Booking status update error:", err);
+       throw err;
     }
-  }, [bookings]);
+  }, [fetchBookings]);
 
   const contextValue = useMemo(() => ({
     bookings, 

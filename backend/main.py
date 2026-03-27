@@ -63,46 +63,6 @@ def verify_token(req: Request):
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-# -------------------- STARTUP SEED --------------------
-
-
-@app.on_event("startup")
-def seed_data():
-    db = SessionLocal()
-
-    try:
-        # Settings
-        if db.query(models.Settings).count() == 0:
-            db.add(models.Settings(
-                phone="+91 8307607971",
-                whatsapp="+91 8307607971",
-                address="Rohtak, Haryana"
-            ))
-            db.commit()
-
-        # Cars
-        if db.query(models.Car).count() == 0:
-            cars_data = [
-                {"name": "Swift Top - Black", "color": "Black", "category": "Hatchback", "price_per_day": 1200,
-                 "image_url": "https://www.caradvice.in/wp-content/uploads/2025/09/564348Swift-Background.webp"},
-                {"name": "Breza Top - White", "color": "White", "category": "SUV", "price_per_day": 1800,
-                 "image_url": "https://media.spinny.com/sp-file-system/public/2025-01-03/cf67cf32846d41e185e0787fe5fe5ce4/file.JPG"},
-            ]
-
-            for c in cars_data:
-                c["status"] = "active"
-                db.add(models.Car(**c))
-
-            db.commit()
-
-        # Admin
-        if db.query(models.User).count() == 0:
-            db.add(models.User(username="admin", password="dlight2024"))
-            db.commit()
-
-    finally:
-        db.close()
-
 # -------------------- PUBLIC --------------------
 
 
@@ -211,3 +171,32 @@ def delete_car(car_id: int, db: Session = Depends(get_db)):
     db.delete(car)
     db.commit()
     return {"detail": "Car deleted"}
+
+# -------------------- ADMIN BOOKINGS --------------------
+
+@app.get("/api/admin/bookings", dependencies=[Depends(verify_token)])
+def get_all_bookings(db: Session = Depends(get_db)):
+    return db.query(models.Booking).all()
+
+@app.delete("/api/admin/bookings/{booking_id}", dependencies=[Depends(verify_token)])
+def delete_booking(booking_id: int, db: Session = Depends(get_db)):
+    booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    db.delete(booking)
+    db.commit()
+    return {"detail": "Booking deleted"}
+
+@app.patch("/api/admin/bookings/{booking_id}/status", dependencies=[Depends(verify_token)])
+def update_booking_status(booking_id: int, status_update: dict, db: Session = Depends(get_db)):
+    booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    status = status_update.get("status")
+    if status is not None:
+        booking.status = status
+        db.commit()
+        db.refresh(booking)
+    return booking

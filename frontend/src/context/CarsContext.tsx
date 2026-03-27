@@ -15,98 +15,6 @@ interface CarsContextType {
 
 const CarsContext = createContext<CarsContextType | undefined>(undefined);
 
-const FALLBACK_CARS: Car[] = [
-  {
-    id: 1,
-    name: "Swift Performance Black",
-    brand: "Maruti Suzuki",
-    price_per_day: 1200,
-    fuel_type: "Petrol",
-    transmission: "Manual",
-    seats: 5,
-    image_url: "/images/cars/black-swift.png",
-    is_available: true,
-    status: "active",
-    category: "Hatchback",
-    color: "Black",
-    description: "Economic and fast hatch.",
-  },
-  {
-    id: 2,
-    name: "Brezza Urban White",
-    brand: "Maruti Suzuki",
-    price_per_day: 1800,
-    fuel_type: "Petrol",
-    transmission: "Manual",
-    seats: 5,
-    image_url: "/images/cars/white-brezza.png",
-    is_available: true,
-    status: "active",
-    category: "SUV",
-    color: "White",
-    description: "Compact SUV for all roads.",
-  },
-  {
-    id: 3,
-    name: "Nexon Tech Grey",
-    brand: "Tata",
-    price_per_day: 1900,
-    fuel_type: "Petrol",
-    transmission: "Manual",
-    seats: 5,
-    image_url: "/images/cars/grey-nexon.png",
-    is_available: true,
-    status: "active",
-    category: "SUV",
-    color: "Grey",
-    description: "Safe and strong for city.",
-  },
-  {
-    id: 4,
-    name: "BMW M4 Competition",
-    brand: "BMW",
-    price_per_day: 4500,
-    fuel_type: "Petrol",
-    transmission: "Automatic",
-    seats: 4,
-    image_url: "/images/cars/bmw-m4.png",
-    is_available: true,
-    status: "active",
-    category: "Luxury",
-    color: "Dark Grey",
-    description: "The ultimate driving machine.",
-  },
-  {
-    id: 5,
-    name: "Audi RS6 Avant",
-    brand: "Audi",
-    price_per_day: 5200,
-    fuel_type: "Petrol",
-    transmission: "Automatic",
-    seats: 5,
-    image_url: "/images/cars/audi-rs6.png",
-    is_available: true,
-    status: "active",
-    category: "Performance",
-    color: "Red",
-    description: "Sleek, fast, and practical.",
-  },
-  {
-    id: 6,
-    name: "Mercedes G-Wagon",
-    brand: "Mercedes-Benz",
-    price_per_day: 7500,
-    fuel_type: "Diesel",
-    transmission: "Automatic",
-    seats: 5,
-    image_url: "/images/cars/mercedes-g.png",
-    is_available: true,
-    status: "active",
-    category: "Luxury SUV",
-    color: "Black",
-    description: "The king of all terrains.",
-  },
-];
 
 export const CarsProvider = ({ children }: { children: ReactNode }) => {
   const [cars, setCars] = useState<Car[]>([]);
@@ -121,18 +29,12 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const res = await fetch(url, { headers });
-      if (!res.ok) throw new Error('Failed to fetch');
+      if (!res.ok) throw new Error('Failed to fetch cars from API');
       const data = await res.json();
-      setCars(data.length > 0 ? data : FALLBACK_CARS);
-      localStorage.setItem("carsData", JSON.stringify(data.length > 0 ? data : FALLBACK_CARS));
+      setCars(data);
     } catch (error) {
       console.error('Error fetching cars:', error);
-      const saved = localStorage.getItem("carsData");
-      if (saved) {
-        setCars(JSON.parse(saved));
-      } else {
-        setCars(FALLBACK_CARS);
-      }
+      setCars([]); // Ensure it's empty on failure to prevent mock data
     } finally {
       setLoading(false);
     }
@@ -146,12 +48,7 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
   const addCar = useCallback(async (newCarData: Omit<Car, 'id'>) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        // Fallback for non-admin or no backend
-        const newCar = { ...newCarData, id: Date.now() } as Car;
-        setCars(prev => [...prev, newCar]);
-        return;
-      }
+      if (!token) throw new Error('Not authenticated');
 
       const res = await fetch(`${API_BASE_URL}/admin/cars`, {
         method: 'POST',
@@ -163,22 +60,17 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (!res.ok) throw new Error('Create failed');
-      await refreshCars();
+      await refreshCars(); // Automatically refresh after adding
     } catch (e) {
-      console.error(e);
-      // Fallback
-      const newCar = { ...newCarData, id: Date.now() } as Car;
-      setCars(prev => [...prev, newCar]);
+      console.error('Failed to add car:', e);
+      throw e;
     }
   }, [refreshCars]);
 
   const updateCar = useCallback(async (id: number, updatedCar: Car) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        setCars(prev => prev.map(c => c.id === id ? updatedCar : c));
-        return;
-      }
+      if (!token) throw new Error('Not authenticated');
 
       const res = await fetch(`${API_BASE_URL}/admin/cars/${id}`, {
         method: 'PUT',
@@ -192,18 +84,15 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
       if (!res.ok) throw new Error('Update failed');
       await refreshCars();
     } catch (e) {
-      console.error(e);
-      setCars(prev => prev.map(c => c.id === id ? updatedCar : c));
+      console.error('Failed to update car:', e);
+      throw e;
     }
   }, [refreshCars]);
 
   const deleteCar = useCallback(async (id: number) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        setCars(prev => prev.filter(c => c.id !== id));
-        return;
-      }
+      if (!token) throw new Error('Not authenticated');
 
       const res = await fetch(`${API_BASE_URL}/admin/cars/${id}`, {
         method: 'DELETE',
@@ -215,8 +104,8 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
       if (!res.ok) throw new Error('Delete failed');
       await refreshCars();
     } catch (e) {
-      console.error(e);
-      setCars(prev => prev.filter(c => c.id !== id));
+      console.error('Failed to delete car:', e);
+      throw e;
     }
   }, [refreshCars]);
 
