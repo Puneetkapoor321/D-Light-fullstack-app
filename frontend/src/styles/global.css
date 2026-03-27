@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-bg: #ffffff;
+    --color-bg-soft: #f8f8f8;
+    --color-text-primary: #000000;
+    --color-text-muted: #666666;
+    --color-accent: #facc15; /* Premium yellow */
+    --color-accent-dark: #eab308;
+    --color-border: #eeeeee;
+    --color-shadow: rgba(0,0,0,0.06);
+
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 3.5rem;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Syne', sans-serif;
+    color: var(--color-text-primary);
+    text-transform: uppercase;
+    letter-spacing: -0.03em;
+  }
+}
+
+
+
+@layer utilities {
+  .shadow-card {
+    box-shadow: 0 4px 20px var(--color-shadow);
+  }
+  .shadow-hover {
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  }
+  
+  .car-card {
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+  }
+  
+  .car-card:hover {
+    transform: perspective(800px) rotateX(1deg) rotateY(-1deg) scale(1.02);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
+  }
+  
+  .zoom-hover {
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .zoom-container:hover .zoom-hover {
+    transform: scale(1.05);
+  }
+}
+
+
