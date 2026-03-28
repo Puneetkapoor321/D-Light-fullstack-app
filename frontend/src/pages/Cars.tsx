@@ -24,9 +24,14 @@ const CarSkeleton = () => (
 );
 
 export default function Cars() {
-  const { cars, loading } = useCars();
+  const { cars, loading, refreshCars } = useCars();
   const [selectedCarId, setSelectedCarId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Ensure data parity on component mount
+  useEffect(() => {
+    refreshCars();
+  }, [refreshCars]);
 
   // Memoized filter results for performance
   const filteredCars = useMemo(() => {
@@ -59,7 +64,7 @@ export default function Cars() {
           </p>
         </div>
         
-        {/* Search & Filter Bar */}
+        {/* Search Bar */}
         <div className="mt-10 flex flex-col md:flex-row items-center gap-4 w-full max-w-2xl mx-auto">
           <div className="relative w-full group">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors" size={18} />

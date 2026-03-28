@@ -26,7 +26,7 @@ export const BookingsProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       
-      const res = await fetch(`${API_BASE_URL}/admin/bookings`, { 
+      const res = await fetch(`${API_BASE_URL}/admin/bookings?t=${Date.now()}`, { 
         headers: { 'Authorization': `Bearer ${token}` } 
       });
       

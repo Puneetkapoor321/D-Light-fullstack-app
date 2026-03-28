@@ -1,21 +1,21 @@
-import { useEffect, useState } from "react";
 import { Phone, MessageCircle } from "lucide-react";
-import { API_BASE_URL } from "../config";
-import type { Settings } from "../types";
+import { useSettings } from "../context/SettingsContext";
 
 export default function Contact() {
-  const [settings, setSettings] = useState<Settings | null>(null);
+  const { settings, loading } = useSettings();
 
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/settings`)
-      .then((res) => res.json())
-      .then((data) => setSettings(data))
-      .catch(console.error);
-  }, []);
-
+  // Settings from context are updated automatically
   const phone = settings?.phone || "+91 98765 43210";
   const wa = settings?.whatsapp || "+91 98765 43210";
   const waLink = wa.replace(/[^0-9]/g, "");
+
+  if (loading) {
+    return (
+      <div className="py-24 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-black/20 border-t-black rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <section
