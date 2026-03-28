@@ -15,15 +15,16 @@ interface CarsContextType {
 
 const CarsContext = createContext<CarsContextType | undefined>(undefined);
 
-
 export const CarsProvider = ({ children }: { children: ReactNode }) => {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // centralized fetchCars() function
   const refreshCars = useCallback(async () => {
-    setLoading(true);
+    // We only show loading state on initial load to avoid UI flicker on CRUD
     try {
       const token = localStorage.getItem('token');
+      // Only admins see all cars, public sees only 'active'
       const url = token ? `${API_BASE_URL}/admin/cars` : `${API_BASE_URL}/cars`;
       const headers: any = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -31,10 +32,13 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
       const res = await fetch(url, { headers });
       if (!res.ok) throw new Error('Failed to fetch cars from API');
       const data = await res.json();
+      
+      // Update state
       setCars(data);
     } catch (error) {
       console.error('Error fetching cars:', error);
-      setCars([]); // Ensure it's empty on failure to prevent mock data
+      // Fallback empty to prevent stale/mock data showing
+      setCars([]); 
     } finally {
       setLoading(false);
     }
@@ -60,7 +64,13 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (!res.ok) throw new Error('Create failed');
-      await refreshCars(); // Automatically refresh after adding
+      
+      // OPTIMIZATION: Instant UI update before re-fetching
+      const createdCar = await res.json();
+      setCars(prev => [...prev, createdCar]);
+      
+      // Re-fetch to ensure sync with server
+      await refreshCars();
     } catch (e) {
       console.error('Failed to add car:', e);
       throw e;
@@ -82,6 +92,10 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (!res.ok) throw new Error('Update failed');
+      
+      // OPTIMIZATION: Instant UI update
+      setCars(prev => prev.map(c => c.id === id ? { ...c, ...updatedCar } : c));
+      
       await refreshCars();
     } catch (e) {
       console.error('Failed to update car:', e);
@@ -90,6 +104,8 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
   }, [refreshCars]);
 
   const deleteCar = useCallback(async (id: number) => {
+    if (!confirm('Are you sure you want to delete this car?')) return;
+    
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Not authenticated');
@@ -102,6 +118,10 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (!res.ok) throw new Error('Delete failed');
+      
+      // OPTIMIZATION: Instant local remove
+      setCars(prev => prev.filter(c => c.id !== id));
+      
       await refreshCars();
     } catch (e) {
       console.error('Failed to delete car:', e);
@@ -151,6 +171,10 @@ export const CarsProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (!res.ok) throw new Error('Status update failed');
+      
+      // OPTIMIZATION: Instant state update
+      setCars(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+      
       await refreshCars();
     } catch (e) {
       console.error(e);

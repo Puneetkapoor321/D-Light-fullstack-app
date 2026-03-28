@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -19,6 +19,8 @@ class Car(Base):
     mileage = Column(String, nullable=True)
     description = Column(String, nullable=True)
     is_available = Column(Boolean, default=True)
+    # is_active column exists in DB but not used in current logic, 
+    # we use 'status' for visibility control
     status = Column(String, default="inactive") # active / inactive
     created_at = Column(DateTime, default=datetime.utcnow)
     
@@ -51,6 +53,7 @@ class Settings(Base):
     phone = Column(String)
     whatsapp = Column(String)
     address = Column(String)
+
 class User(Base):
     __tablename__ = "users"
 

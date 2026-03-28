@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, useMemo, useCallback, t
 import type { Booking } from '../types';
 import { API_BASE_URL } from '../config';
 
-
 interface BookingsContextType {
   bookings: Booking[];
   loading: boolean;
@@ -18,22 +17,24 @@ export const BookingsProvider = ({ children }: { children: ReactNode }) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load from backend on init
   const fetchBookings = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+      // Public users don't usually fetch all bookings, but admins do.
+      if (!token) {
+        setLoading(false);
+        return;
+      }
       
-      const res = await fetch(`${API_BASE_URL}/admin/bookings`, { headers });
+      const res = await fetch(`${API_BASE_URL}/admin/bookings`, { 
+        headers: { 'Authorization': `Bearer ${token}` } 
+      });
+      
       if (res.ok) {
-        const data = await res.json();
-        setBookings(data);
-      } else {
-        setBookings([]);
+        setBookings(await res.json());
       }
     } catch (err) {
       console.error("Failed to fetch bookings:", err);
-      setBookings([]);
     } finally {
       setLoading(false);
     }
@@ -50,8 +51,10 @@ export const BookingsProvider = ({ children }: { children: ReactNode }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+      
       if (res.ok) {
-        await fetchBookings();
+        // If an admin is booking (rare), refresh their list
+        if (localStorage.getItem('token')) await fetchBookings();
         return true;
       }
       return false;
@@ -62,13 +65,19 @@ export const BookingsProvider = ({ children }: { children: ReactNode }) => {
   }, [fetchBookings]);
 
   const deleteBooking = useCallback(async (id: number) => {
+    if (!confirm('Are you sure you want to delete this booking record?')) return;
+    
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_BASE_URL}/admin/bookings/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error("Failed to delete booking");
+      
+      if (!res.ok) throw new Error("Delete failed");
+      
+      // Optimistic update
+      setBookings(prev => prev.filter(b => b.id !== id));
       await fetchBookings();
     } catch (err) {
       console.error("Booking deletion error:", err);
@@ -87,10 +96,13 @@ export const BookingsProvider = ({ children }: { children: ReactNode }) => {
          },
          body: JSON.stringify({ status })
        });
+       
        if (res.ok) {
+          // Optimistic update
+          setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
           await fetchBookings();
        } else {
-          throw new Error("Failed to update booking status");
+          throw new Error("Status update failed");
        }
     } catch (err) {
        console.error("Booking status update error:", err);
